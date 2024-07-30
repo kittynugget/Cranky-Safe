@@ -1,5 +1,6 @@
 import "gameOverScene"
-
+import "safe"
+import "hand"
 
 
 local pd <const> = playdate
@@ -19,20 +20,16 @@ dialSprite.draw = function(x, y, w, h)
 	--gfx.drawText(angle, 180, 20)
 end
 
-
+testAngle = 0
 
 class('BoxSprite').extends(gfx.sprite)
 
 class('SymbolSprite').extends(gfx.sprite)
 
-local symbolTable = gfx.imagetable.new("images/symbols-table-40-40")
+symbolTable = gfx.imagetable.new("images/symbols-table-40-40")
 local blankImage = gfx.image.new("images/blank")
 
-lockImage1 = blankImage
-lockImage2 = blankImage
-lockImage3 = blankImage
-lockImage4 = 0 -- used in medium
-lockImage5 = 0 -- used in hard
+
 
 function BoxSprite:init(x, y)
     BoxSprite.super.init(self) -- this is critical
@@ -58,34 +55,38 @@ function SymbolSprite:init(x, y, image)
 	end
 end
 
+safe = safe()
 
-
+boxX = 190
+boxY = 120
+symbolX = boxX + 170
+symbolY = boxY - 87
 
 function GameScene:init()
 
 	--#region setting up solution boxes
-	sprite = BoxSprite(200, 120)
+	sprite = BoxSprite(boxX, boxY)
 	sprite:add()
-	sSprite = SymbolSprite(370, 33,lockImage1)
+	sSprite = SymbolSprite(symbolX, symbolY,blankImage)
 	sSprite:add()
 
-	sprite1 = BoxSprite(150, 120)
+	sprite1 = BoxSprite(boxX - (50*1), boxY)
 	sprite1:add()
-	sSprite1 = SymbolSprite(320, 33,lockImage2)
+	sSprite1 = SymbolSprite(symbolX - (50*1), symbolY,blankImage)
 	sSprite1:add()
 
-	sprite2 = BoxSprite(100, 120)
+	sprite2 = BoxSprite(boxX - (50*2), boxY)
 	sprite2:add()
-	sSprite2 = SymbolSprite(270, 33,lockImage3)
+	sSprite2 = SymbolSprite(symbolX - (50*2), symbolY,blankImage)
 	sSprite2:add()
 
 
 	if difficulty == "Medium" or difficulty == "Hard" then
 
 		--medium avtivated
-		sprite3 = BoxSprite(50, 120)
+		sprite3 = BoxSprite(boxX - (50*3), boxY)
 		sprite3:add()
-		sSprite3 = SymbolSprite(220, 33,lockImage2)
+		sSprite3 = SymbolSprite(symbolX - (50*3), symbolY,blankImage)
 		sSprite3:add()		
 
 	end
@@ -94,43 +95,47 @@ function GameScene:init()
 	if difficulty == "Hard" then
 
 		--hard activated
-		sprite4 = BoxSprite(0, 120)
+		sprite4 = BoxSprite(boxX - (50*4), boxY)
 		sprite4:add()
-		sSprite4 = SymbolSprite(170, 33,lockImage3)
+		sSprite4 = SymbolSprite(symbolX - (50*4), symbolY,blankImage)
 		sSprite4:add()
 
 	end
 	--#endregion
 	dialSprite:add()
 
+
+	safe:add()
+
+	--hand = hand(200,120)
+	--hand:add()
+
 	self:add()
 end
 
 function GameScene:update()
 
+    if pd.buttonJustPressed(pd.kButtonB) then
+		SCENE_MANAGER:switchScene(GameOverScene)
+    end
 	local crankPosition = playdate.getCrankPosition()
     angle = (2*crankPosition + 1)/2
 
 	testAngle = math.floor(angle)
 	dialSprite:markDirty()
 
-	if pd.buttonJustPressed(pd.kButtonB) then
-		SCENE_MANAGER:switchScene(GameOverScene)
-		--[[
-		sSprite:setImage(symbolTable[math.random(1,85)])
-		sSprite1:setImage(symbolTable[math.random(1,85)])
-		sSprite2:setImage(symbolTable[math.random(1,85)])
-		if difficulty == "Medium" or difficulty == "Hard" then
-			sSprite3:setImage(symbolTable[math.random(1,85)])
-		end
-		if difficulty == "Hard" then
-			sSprite4:setImage(symbolTable[math.random(1,85)])
-		end
-		]]--
+	--[[
+	sSprite:setImage(symbolTable[math.random(1,85)])
+	sSprite1:setImage(symbolTable[math.random(1,85)])
+	sSprite2:setImage(symbolTable[math.random(1,85)])
+	if difficulty == "Medium" or difficulty == "Hard" then
+		sSprite3:setImage(symbolTable[math.random(1,85)])
 	end
+	if difficulty == "Hard" then
+		sSprite4:setImage(symbolTable[math.random(1,85)])
+	end
+	]]--
 	
-	if pd.buttonJustPressed(pd.kButtonA) then
-		sSprite:setImage(symbolTable[math.random(1,85)])
-	end
+
 	
 end

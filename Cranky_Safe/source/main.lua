@@ -26,11 +26,11 @@ end
 
 
 
-CURRENT_SCENE = "GameScene"
+CURRENT_SCENE = "MenuScene"
 
 SCENE_MANAGER = SceneManager()
 
-GameScene()
+MenuScene()
 
 wallCollisionResponse = 'overlap'
 
