@@ -1,7 +1,9 @@
 import "gameOverScene"
-import "safe"
+
 import "hand"
 
+knobPosition = 240
+handPosition = knobPosition - 55
 
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
@@ -9,26 +11,34 @@ local gfx <const> = playdate.graphics
 class('GameScene').extends(gfx.sprite)
 --imageindex-- do not exceed 85 or go below 1
 
+quitOut = false 
 
 --dialImage sprite setup
 local dialImage = gfx.image.new("images/dial")
-local angle = 0
 local dialSprite = gfx.sprite.new()
 dialSprite:setBounds(0, 0, 400, 240)
 dialSprite.draw = function(x, y, w, h)
-	dialImage:drawRotated(310, 150, angle, .8)
+	dialImage:drawRotated(knobPosition, 150, angle, .8)
 	--gfx.drawText(angle, 180, 20)
 end
 
-testAngle = 0
+endStarted = false
+
+
+startGameTime = 0
+currentGameTime = 0
 
 class('BoxSprite').extends(gfx.sprite)
 
 class('SymbolSprite').extends(gfx.sprite)
 
+class('TimerSprite').extends(gfx.sprite)
+
+class('actionSprite').extends(gfx.sprite)
+
+
 symbolTable = gfx.imagetable.new("images/symbols-table-40-40")
 local blankImage = gfx.image.new("images/blank")
-
 
 
 function BoxSprite:init(x, y)
@@ -55,14 +65,58 @@ function SymbolSprite:init(x, y, image)
 	end
 end
 
-safe = safe()
+
+function TimerSprite:init(x, y)
+    TimerSprite.super.init(self) -- this is critical
+	self:setBounds(0, 0, 400, 240)
+    self:moveTo(x, y)
+	self.draw = function(x, y, w, h)
+		gfx.setColor(gfx.kColorBlack)
+		gfx.fillRect(10, 10, 82, 22)
+		gfx.setColor(gfx.kColorWhite)
+		gfx.fillRect(11, 11, 80, 20)
+		gfx.drawText("Time: ",10,12)
+		gfx.drawTextAligned(currentGameTime,85,12,kTextAlignment.right)
+	end
+end
+
+local safe = safe()
 
 boxX = 190
 boxY = 120
 symbolX = boxX + 170
 symbolY = boxY - 87
 
+--button sprites
+local aImage = gfx.image.new("images/a")
+local aSprite = gfx.sprite.new()
+aSprite:setBounds(0, 0, 400, 240)
+aSprite.draw = function(x, y, w, h)
+	aImage:drawScaled(340, 120, 1.5)
+end
+
+HiddenAmount = 0.5
+
+local fade_img = gfx.image.new(400,280,gfx.kColorWhite)
+local fade_sprite = gfx.sprite.new(fade_img:fadedImage(HiddenAmount, gfx.image.kDitherTypeBayer8x8))
+
+
 function GameScene:init()
+
+	pd.timer.performAfterDelay(5000, function()
+		showCrank = false
+	end)
+
+	mainSong:setVolume(0.15)
+	quitOut = false
+	currentBox = 1
+	startGameTime = pd.getElapsedTime()
+	currentGameTime = startGameTime - startGameTime
+
+
+	aSprite:add()
+	fade_sprite:add()
+	fade_sprite:moveTo(200, 140)
 
 	--#region setting up solution boxes
 	sprite = BoxSprite(boxX, boxY)
@@ -80,6 +134,11 @@ function GameScene:init()
 	sSprite2 = SymbolSprite(symbolX - (50*2), symbolY,blankImage)
 	sSprite2:add()
 
+	Timer = TimerSprite(200, 130)
+	Timer:add()
+
+
+	
 
 	if difficulty == "Medium" or difficulty == "Hard" then
 
@@ -106,36 +165,39 @@ function GameScene:init()
 
 
 	safe:add()
-
-	--hand = hand(200,120)
-	--hand:add()
+	angleSet()
+	
+	local hand = hand(200,120)
+	hand:add()
 
 	self:add()
+
+	endStarted = false
+	triggerEnd = false
 end
 
 function GameScene:update()
 
-    if pd.buttonJustPressed(pd.kButtonB) then
-		SCENE_MANAGER:switchScene(GameOverScene)
+	fade_sprite:setImage(fade_img:fadedImage(HiddenAmount, gfx.image.kDitherTypeBayer8x8))
+
+	if triggerEnd == false then
+		currentGameTime = pd.getElapsedTime() - startGameTime
+		currentGameTime = tonumber(string.format("%.1f", currentGameTime))
+	end
+
+    if pd.buttonJustPressed(pd.kButtonB)  and transitionFinished then
+		quitOut = true
+		triggerEnd = true
     end
-	local crankPosition = playdate.getCrankPosition()
-    angle = (2*crankPosition + 1)/2
+	
 
-	testAngle = math.floor(angle)
 	dialSprite:markDirty()
-
-	--[[
-	sSprite:setImage(symbolTable[math.random(1,85)])
-	sSprite1:setImage(symbolTable[math.random(1,85)])
-	sSprite2:setImage(symbolTable[math.random(1,85)])
-	if difficulty == "Medium" or difficulty == "Hard" then
-		sSprite3:setImage(symbolTable[math.random(1,85)])
-	end
-	if difficulty == "Hard" then
-		sSprite4:setImage(symbolTable[math.random(1,85)])
-	end
-	]]--
+	fade_sprite:markDirty()
 	
+	if triggerEnd and endStarted == false then
+		endStarted = true
+		score = currentGameTime
+		SCENE_MANAGER:switchScene(GameOverScene)
+	end
 
-	
 end

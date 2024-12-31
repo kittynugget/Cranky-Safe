@@ -1,7 +1,7 @@
 name=CrankySafe
 author=Kittynugget
-description=crank the knob till you hear the right number
-bundleID=com.organization.package
+description=crank the knob till you hear the right click
+bundleID=nugg.Kittynugget.Cranky_safe
 version=0.1.0
 buildNumber=1
 imagePath=images
