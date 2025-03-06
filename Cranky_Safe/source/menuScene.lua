@@ -108,6 +108,7 @@ function MenuScene:init()
 
 	correctAngle = 100000
 
+
     self:add()
 end
 

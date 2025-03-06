@@ -13,8 +13,12 @@ end
 
 currentBox = 1
 
+easyBuffer = 10
+medBuffer = 5
+hardBuffer = 1
+
 triggerNote = false
-buffer = 3
+buffer = easyBuffer
 range = 20
 correctAngle = 20
 previousAngle = 0
@@ -22,9 +26,9 @@ inCorrectPosition = false
 triggerEnd = false
 testAngle = 0
 
-correctSound = 100
+correctSound = 75
 wrongSound = 50
-
+angleList = {}
 
 class('safe').extends(gfx.sprite)
 
@@ -72,43 +76,69 @@ end
 
 function angleCheck()
     local sound = wrongSound
-    --print("testAngle .. range .. buffer ..correctAngle " .. testAngle .. " , " .. range .." , " .. buffer .." , " ..correctAngle)
-    if testAngle % range <= buffer or testAngle % range >= range - buffer then
-        sound = wrongSound
-        HiddenAmount = 0.5
-        if testAngle <= correctAngle + buffer and testAngle >= correctAngle - buffer then
-            sound = correctSound
-            inCorrectPosition = true 
-            HiddenAmount = 0
-        end
+    if setContains(angleList,testAngle) then
+        sound = correctSound
+        inCorrectPosition = true 
+        HiddenAmount = 0
         triggerNote = true
     else
+        sound = wrongSound
+        inCorrectPosition = false 
         HiddenAmount = 0.5
-        inCorrectPosition = false
         triggerNote = false
-        
     end
-
-    if triggerNote == true and pd.isCrankDocked() == false and triggerEnd == false then
-        lockSound:playNote(sound)
+    if CURRENT_SCENE == "MenuScene" then
+    else
+        if triggerNote == true and pd.isCrankDocked() == false and triggerEnd == false then
+            lockSound:playNote(sound)
+        end
     end
 end
 
 function angleSet()
     print("setting angle")
     correctAngle = (math.floor(math.random(18))) * 20
+    if difficulty == "Easy" then
+        buffer = easyBuffer
+        correctAngle = (math.floor(math.random(36))) * 10
+    end
     if difficulty == "Medium" then
-        range = 10
-        buffer = 2
+        buffer = medBuffer
         correctAngle = (math.floor(math.random(36))) * 10
     end
     if difficulty == "Hard" then
-        range = 5
-        buffer = 1
+        buffer = hardBuffer
         correctAngle = (math.floor(math.random(72))) * 5
     end
     if (correctAngle == previousAngle) then
         angleSet()
     end
     previousAngle = correctAngle
+    print(correctAngle)
+    listSize = buffer*2
+    for i = 0, listSize do
+
+        bufferAngle = correctAngle - buffer + i
+        if bufferAngle >= 360 then
+            bufferAngle = bufferAngle - 360
+        elseif bufferAngle <= 0 then
+            bufferAngle = bufferAngle + 360
+        end
+        angleList[i] = bufferAngle
+        
+    end
+    for i = 0, listSize do
+        print(angleList[i])
+    end
+    
+end
+
+function setContains(set, testValue)
+    IsIn = false
+    for i = 0, listSize do
+        if set[i] == testValue then
+            IsIn = true
+        end
+    end
+    return IsIn
 end
